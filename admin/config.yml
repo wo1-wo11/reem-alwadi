@@ -1,0 +1,27 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+locale: ar
+
+collections:
+  - name: "properties"
+    label: "العقارات"
+    label_singular: "عقار"
+    folder: "content/properties"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "عنوان العقار", name: "title", widget: "string" }
+      - { label: "النوع", name: "type", widget: "select", options: ["شقة", "فيلا", "أرض", "مكتب", "محل"] }
+      - { label: "الحي", name: "district", widget: "string" }
+      - { label: "السعر (ريال)", name: "price", widget: "number" }
+      - { label: "المساحة (م²)", name: "area", widget: "number" }
+      - { label: "عدد الغرف", name: "rooms", widget: "number", default: 0 }
+      - { label: "الوصف", name: "desc", widget: "text" }
+      - { label: "خط الطول (lng)", name: "lng", widget: "number" }
+      - { label: "خط العرض (lat)", name: "lat", widget: "number" }
+      - { label: "الصورة", name: "image", widget: "image" }
