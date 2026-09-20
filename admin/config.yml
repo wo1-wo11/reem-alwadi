@@ -18,10 +18,10 @@ collections:
       - { label: "عنوان العقار", name: "title", widget: "string" }
       - { label: "النوع", name: "type", widget: "select", options: ["شقة", "فيلا", "أرض", "مكتب", "محل"] }
       - { label: "الحي", name: "district", widget: "string" }
-      - { label: "السعر (ريال)", name: "price", widget: "number" }
-      - { label: "المساحة (م²)", name: "area", widget: "number" }
-      - { label: "عدد الغرف", name: "rooms", widget: "number", default: 0 }
+      - { label: "السعر (ريال)", name: "price", widget: "string" }
+      - { label: "المساحة (م²)", name: "area", widget: "string" }
+      - { label: "عدد الغرف", name: "rooms", widget: "string", default: "0" }
       - { label: "الوصف", name: "desc", widget: "text" }
-     - { label: "خط الطول (lng)", name: "lng", widget: "string" }
+      - { label: "خط الطول (lng)", name: "lng", widget: "string" }
       - { label: "خط العرض (lat)", name: "lat", widget: "string" }
       - { label: "الصورة", name: "image", widget: "image" }
