@@ -22,6 +22,6 @@ collections:
       - { label: "المساحة (م²)", name: "area", widget: "number" }
       - { label: "عدد الغرف", name: "rooms", widget: "number", default: 0 }
       - { label: "الوصف", name: "desc", widget: "text" }
-      - { label: "خط الطول (lng)", name: "lng", widget: "number" }
-      - { label: "خط العرض (lat)", name: "lat", widget: "number" }
+     - { label: "خط الطول (lng)", name: "lng", widget: "string" }
+      - { label: "خط العرض (lat)", name: "lat", widget: "string" }
       - { label: "الصورة", name: "image", widget: "image" }
