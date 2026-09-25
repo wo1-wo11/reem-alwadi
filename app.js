@@ -25,27 +25,25 @@ let markers = [];
 // ========== جلب العقارات من GitHub ==========
 async function fetchProperties() {
   try {
-    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CONTENT_PATH}`;
+    const url = 'https://api.github.com/repos/' + GITHUB_USER + '/' + GITHUB_REPO + '/contents/' + CONTENT_PATH;
     const res = await fetch(url);
     
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
+      throw new Error('HTTP ' + res.status);
     }
     
     const files = await res.json();
     
-    // فلترة ملفات .md فقط (بدون .gitkeep)
-    const mdFiles = files.filter(f => 
-      f.name.endsWith('.md') && f.name !== '.gitkeep'
-    );
+    const mdFiles = files.filter(function(f) {
+      return f.name.endsWith('.md') && f.name !== '.gitkeep';
+    });
     
     if (mdFiles.length === 0) {
       showNoProperties();
       return;
     }
     
-    // جلب كل ملف
-    const promises = mdFiles.map(async (file) => {
+    const promises = mdFiles.map(async function(file) {
       const contentRes = await fetch(file.download_url);
       const rawText = await contentRes.text();
       return parseMarkdown(rawText, file.name);
@@ -53,26 +51,20 @@ async function fetchProperties() {
     
     allProperties = await Promise.all(promises);
     
-    // تحديث الواجهة
     updateDistricts();
     renderProperties(allProperties);
     renderMarkers(allProperties);
     
   } catch (error) {
     console.error('خطأ في جلب العقارات:', error);
-    document.getElementById('loadingMsg').innerHTML = 
-      '❌ حدث خطأ في تحميل العقارات<br><small style="font-size:12px">' + error.message + '</small>';
+    document.getElementById('propertiesList').innerHTML = 
+      '<p style="text-align:center;grid-column:1/-1;color:#888;padding:40px">' +
+      '❌ حدث خطأ في تحميل العقارات<br><small>' + error.message + '</small></p>';
   }
 }
 
 // ========== تحويل ملف Markdown إلى كائن ==========
 function parseMarkdown(text, filename) {
-  // الملف يحتوي على:
-  // ---
-  // title: ...
-  // ...
-  // ---
-  
   const match = text.match(/^---\s*\n([\s\S]*?)\n---/);
   
   if (!match) {
@@ -92,7 +84,7 @@ function parseMarkdown(text, filename) {
       desc: data.desc || '',
       lng: Number(data.lng) || 46.6753,
       lat: Number(data.lat) || 24.7136,
-      image: convertImageUrl(data.image) || 'https://pxvia.placeholder.com/400x300?text=صورة+العقار',
+      image: convertImageUrl(data.image),
       id: filename
     };
   } catch (e) {
@@ -103,18 +95,16 @@ function parseMarkdown(text, filename) {
 
 // ========== تحويل مسار الصورة ==========
 function convertImageUrl(imagePath) {
-  if (!imagePath) return null;
+  if (!imagePath) {
+    return 'https://via.placeholder.com/400x300/1a3a2e/d4af37?text=صورة+العقار';
+  }
   
-  // لو رابط مباشر
   if (imagePath.startsWith('http')) {
     return imagePath;
   }
   
-  // لو مسار داخل GitHub
-  // مثال: /images/uploads/photo.jpg
-  // نحوّله لرابط raw
   const cleanPath = imagePath.replace(/^\//, '');
-  return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${cleanPath}`;
+  return 'https://raw.githubusercontent.com/' + GITHUB_USER + '/' + GITHUB_REPO + '/' + GITHUB_BRANCH + '/' + cleanPath;
 }
 
 // ========== عرض العقارات في البطاقات ==========
@@ -126,56 +116,59 @@ function renderProperties(list) {
   const container = document.getElementById('propertiesList');
   container.innerHTML = '';
   
-  const filtered = list.filter(p => p !== null);
+  const filtered = list.filter(function(p) { return p !== null; });
   
   if (filtered.length === 0) {
     container.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#888;padding:40px">لا توجد عقارات مطابقة</p>';
     return;
   }
   
-  filtered.forEach(p => {
+  filtered.forEach(function(p) {
     const card = document.createElement('div');
     card.className = 'card';
-    card.onclick = () => openModal(p);
-    card.innerHTML = `
-      <div class="card-img" style="background-image:url('${p.image}')">
-        <span class="card-badge">${p.type}</span>
-      </div>
-      <div class="card-body">
-        <h3>${p.title}</h3>
-        <div class="price">${formatPrice(p.price)}</div>
-        <div class="card-info">
-          <span>📍 ${p.d;istrict}</span>
-          <span>📐 ${ heightp.area} م²</span>
-:           ${p.rooms > 0 ? `<span>🛏 ${p.rooms} غرف</span>` : ''}
-        </div>
-        <span class="card-btn">التفاصيل</span>
-      </div>
-    `;
+    card.onclick = function() { openModal(p); };
+    
+    const roomsHTML = p.rooms > 0 ? '<span>🛏 ' + p.rooms + ' غرف</span>' : '';
+    
+    card.innerHTML = 
+      '<div class="card-img" style="background-image:url(\'' + p.image + '\')">' +
+        '<span class="card-badge">' + p.type + '</span>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<h3>' + p.title + '</h3>' +
+        '<div class="price">' + formatPrice(p.price) + '</div>' +
+        '<div class="card-info">' +
+          '<span>📍 ' + p.district + '</span>' +
+          '<span>📐 ' + p.area + ' م²</span>' +
+          roomsHTML +
+        '</div>' +
+        '<span class="card-btn">التفاصيل</span>' +
+      '</div>';
+    
     container.appendChild(card);
   });
 }
 
 // ========== عرض الأيقونات على الخريطة ==========
 function renderMarkers(list) {
-  markers.forEach(m => m.remove());
+  markers.forEach(function(m) { m.remove(); });
   markers = [];
   
-  list.filter(p => p !== null).forEach(p => {
+  list.filter(function(p) { return p !== null; }).forEach(function(p) {
     const el = document.createElement('div');
-    el.style.cssText = `
-      width: 3636px; background: #d4af37;
-      border: 3px solid white; border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg); cursor: pointer;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-      display: flex; align-items: center; justify-content: center;
-    `;
+    el.style.cssText = 
+      'width: 36px; height: 36px; background: #d4af37;' +
+      'border: 3px solid white; border-radius: 50% 50% 50% 0;' +
+      'transform: rotate(-45deg); cursor: pointer;' +
+      'box-shadow: 0 3px 10px rgba(0,0,0,0.3);' +
+      'display: flex; align-items: center; justify-content: center;';
+    
     const inner = document.createElement('div');
     inner.style.cssText = 'transform: rotate(45deg); font-size: 16px;';
     inner.textContent = '🏠';
     el.appendChild(inner);
     
-    el.addEventListener('click', () => openModal(p));
+    el.addEventListener('click', function() { openModal(p); });
     
     const marker = new mapboxgl.Marker({ element: el })
       .setLngLat([p.lng, p.lat])
@@ -186,14 +179,17 @@ function renderMarkers(list) {
 
 // ========== تحديث فلتر الأحياء ==========
 function updateDistricts() {
-  const districts = [...new Set(
-    allProperties.filter(p => p).map(p => p.district).filter(Boolean)
-  )];
+  const districts = [];
+  allProperties.filter(function(p) { return p; }).forEach(function(p) {
+    if (p.district && districts.indexOf(p.district) === -1) {
+      districts.push(p.district);
+    }
+  });
   
   const select = document.getElementById('filterDistrict');
   select.innerHTML = '<option value="">كل الأحياء</option>';
   
-  districts.forEach(d => {
+  districts.forEach(function(d) {
     const opt = document.createElement('option');
     opt.value = d;
     opt.textContent = d;
@@ -207,12 +203,14 @@ function applyFilters() {
   const district = document.getElementById('filterDistrict').value;
   const priceRange = document.getElementById('filterPrice').value;
   
-  let filtered = allProperties.filter(p => {
+  const filtered = allProperties.filter(function(p) {
     if (!p) return false;
     if (type && p.type !== type) return false;
     if (district && p.district !== district) return false;
     if (priceRange) {
-      const [min, max] = priceRange.split('-').map(Number);
+      const parts = priceRange.split('-');
+      const min = Number(parts[0]);
+      const max = Number(parts[1]);
       if (p.price < min || p.price > max) return false;
     }
     return true;
@@ -237,8 +235,8 @@ function openModal(p) {
   document.getElementById('modalDistrict').textContent = p.district;
   document.getElementById('modalRooms').textContent = p.rooms > 0 ? p.rooms + ' غرف' : '—';
   
-  const msg = encodeURIComponent(`السلام عليكم، مهتم بـ: ${p.title} - السعر: ${formatPrice(p.price)}`);
-  document.getElementById('modalWhatsapp').href = `https://wa.me/966552500035?text=${msg}`;
+  const msg = encodeURIComponent('السلام عليكم، مهتم بـ: ' + p.title + ' - السعر: ' + formatPrice(p.price));
+  document.getElementById('modalWhatsapp').href = 'https://wa.me/966552500035?text=' + msg;
   document.getElementById('modal').classList.add('active');
   map.flyTo({ center: [p.lng, p.lat], zoom: 14, speed: 1.2 });
 }
@@ -247,7 +245,7 @@ function closeModal() {
   document.getElementById('modal').classList.remove('active');
 }
 
-document.getElementById('modal').addEventListener('click', e => {
+document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target.id === 'modal') closeModal();
 });
 
@@ -259,6 +257,6 @@ function showNoProperties() {
 }
 
 // ========== التشغيل ==========
-map.on('load', () => {
+map.on('load', function() {
   fetchProperties();
 });
